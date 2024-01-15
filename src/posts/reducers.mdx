@@ -1,0 +1,191 @@
+---
+title: State Reducer Pattern.
+author: Giovani Fouz Jiménez
+description: The State Reducer Pattern is a powerful technique....
+src: /images/state-reducer.jpg
+alt: state-reducer
+date: January 11, 2024
+---
+
+# State Reducer Pattern in react.
+
+
+## Understanding the State Reducer Pattern
+
+ The State Reducer Pattern is a powerful technique.
+ State Reducer Pattern is the concept of "state reducers." These are functions responsible for handling state transitions based on actions dispatched to them. The pattern fosters a unidirectional flow of data, making it easier to reason about the application's state changes.
+
+## Advantages of the State Reducer Pattern
+The State Reducer Pattern offers several advantages including:
+
+1. Improved Separation of Concerns:
+By encapsulating state logic within reducers, the component's responsibilities become clearer, leading to better maintainability.
+
+
+2. Reusability:
+Reducers can be reused across components, leading to a more modular and organized codebase.
+
+
+3. Predictable State Changes:
+As reducers follow strict patterns, it becomes easier to predict and test state transitions, reducing bugs and unexpected behavior.
+
+
+Implementing the State Reducer Pattern
+
+Now, let's walk through a step-by-step guide on how to implement the State Reducer Pattern in a React application using React Hooks:
+
+
+```jsx
+    import { useState } from 'react';
+
+    const App = () => {
+        const initialState = {
+            count: 0,
+            isLoading: false,
+        };
+    const [state, setState] = useState(initialState);
+
+    const reducer = (state, action) => {
+        switch (action.type) {
+            case 'INCREMENT':
+                return { ...state, count: state.count + 1 };
+            case 'DECREMENT':
+                return { ...state, count: state.count - 1 };
+            case 'SET_LOADING':
+                return { ...state, isLoading: action.payload };
+            default:
+                return state;
+        }
+    }
+
+     const dispatch = (action) => {
+            const newState = reducer(state, action);
+            setState(newState);
+        }
+     const handleIncrement = () => {
+            dispatch({ type: 'INCREMENT' });
+        };
+
+  }   
+
+  export default App;
+
+```
+Step 1: Setting up the State
+In your functional component, start by declaring the initial state using the useState hook.
+
+Step 2: Creating the Reducer
+Next, define your reducer function responsible for handling state changes based on dispatched actions. The reducer function takes the current state and an action object as arguments and returns the new state:
+
+
+Step 3: Dispatching Actions
+In your component, you can dispatch actions using regular function calls. Each action will be processed by the reducer, and the state will be updated accordingly:
+
+
+# State reducer pattern with zustand.
+
+## Why Zustand?
+Like redux, zustand also follows the immutable state model of the useState Hook to update the state. However, zustand provides a much cleaner, less boilerplate and simpler approach to managing the state. This simplicity makes it a good choice for beginners getting started with state management libraries.
+
+## Installing Zustand Library
+Let’s install the library using the following NPM command:
+
+Copy
+```npm 
+npm install zustand
+```
+
+If you can't live without Redux-like reducers, you can define a dispatch function on the root level of
+the store.
+
+for example:
+
+```ts
+export const useCartStore = create<CartStore>((set) => ({
+  /* other state properties...  */
+  dispatch: (action: Action) => set((state) => reducer(state, action)),
+}));
+```
+
+We created a store by invoking the create function from the zustand library. This function takes a callback that will hold the store data (i.e. global states and actions) and, in the end, return a Hook that we assigned to (useCartStore). In the store callback, the library exposes a set function to update the state in the store.
+
+the whole code:
+
+```ts
+import {create} from 'zustand'
+
+//TypeScript interfaces has been omitted for simplicity.
+const actions: Actions= {
+  addToCart: (state: CartStore, action: Action) => {
+    const { id } = action.payload;
+    const index = state.cart.findIndex((item) => item.id === id);
+
+    if (index >= 0) {
+      const cart = [
+        ...state.cart.slice(0, index),
+        { ...state.cart[index], quantity: state.cart[index].quantity + 1 },
+        ...state.cart.slice(index + 1),
+      ];
+      const newState = {
+        ...state,
+        cart,
+      };
+
+      updateLocalStorage(newState);
+      return newState;
+    }
+    //action.payload refers to the "product".
+    const cart = [...state.cart, { ...action.payload, quantity: 1 }];
+    const newState = { ...state, cart };
+
+    updateLocalStorage(newState);
+    return newState;
+  },
+
+  removeFromCart: (state: CartStore, action: Action) => {
+    const { id } = action.payload;
+    const newState = {...state, cart:state.cart.filter((item) => item.id !== id)};
+    updateLocalStorage(newState);
+    return newState;
+  },
+  emptyCart: () => {
+    updateLocalStorage([]);
+    return [];
+  },
+};
+
+const reducer = (state: CartStore, action: Action) => {
+  const { type } = action;
+  const currentAction = actions[type];
+  return currentAction ? currentAction(state, action) : state;
+};
+
+export const useCartStore = create<CartStore>((set) => ({
+  cart: [],
+  product: {},
+  dispatch: (action: Action) => set((state) => reducer(state, action)),
+}));
+
+
+
+
+/*example of how to consume the store
+
+import {useCartStore} from 'store'
+const cart = useCartStore( state => state.cart )
+const product = useCartStore( state => state.product )
+const dispatch = useCartStore((state) => state.dispatch)
+dispatch({type:'addItemToCart', payload: product}) 
+*/
+```
+
+## State Reducer Pattern Advanced Usage and Best Practices
+The State Reducer Pattern can be extended to handle more complex state transitions and asynchronous actions. Here are some best practices for leveraging the pattern effectively:
+
+Async Actions: To handle asynchronous actions, consider using middleware like Redux Thunk or Redux Saga along with the State Reducer Pattern.
+
+Avoid Nested Reducers: While it's possible to nest reducers, it's generally better to keep them flat and composable for better readability.
+
+Unit Testing: Write comprehensive unit tests for your reducers to ensure they behave as expected.
+
+thanks for reading!
